@@ -8,6 +8,10 @@
     "node": "*"
   },
   "main": "./out/htmlCssJsService",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bmewburn/vscode-html-languageserver"
+  },
   "dependencies": {
     "typescript": "^3.5.3",
     "vscode-css-languageservice": "^4.0.3-next.4",
@@ -36,5 +40,6 @@
     "install-server-next": "yarn add vscode-languageserver@next",
     "install-server-local": "npm install ../../../../vscode-languageserver-node/server -f",
     "test": "npm run compile && npx mocha"
-  }
+  },
+  "private": false
 }
