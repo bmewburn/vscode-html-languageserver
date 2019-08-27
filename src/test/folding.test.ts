@@ -25,7 +25,7 @@ function assertRanges(lines: string[], expected: ExpectedIndentRange[], message?
 	let languageModes = getLanguageModes({ css: true, javascript: true }, workspace, ClientCapabilities.LATEST);
 	let actual = getFoldingRanges(languageModes, document, nRanges, null);
 
-	let actualRanges = [];
+	let actualRanges:ExpectedIndentRange[] = [];
 	for (let i = 0; i < actual.length; i++) {
 		actualRanges[i] = r(actual[i].startLine, actual[i].endLine, actual[i].kind);
 	}

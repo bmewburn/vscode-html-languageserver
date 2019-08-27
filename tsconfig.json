@@ -1,7 +1,12 @@
 {
-	"extends": "../../shared.tsconfig.json",
 	"compilerOptions": {
-		"outDir": "./out"
+		"outDir": "./out",
+		"removeComments": true,
+		"target": "ES6",
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"strictNullChecks": true,
+		"declaration": true
 	},
 	"include": [
 		"src/**/*"

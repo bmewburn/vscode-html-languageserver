@@ -148,7 +148,7 @@ connection.onInitialized(() => {
 		connection.onNotification(DidChangeWorkspaceFoldersNotification.type, e => {
 			const toAdd = e.event.added;
 			const toRemove = e.event.removed;
-			const updatedFolders = [];
+			const updatedFolders:WorkspaceFolder[] = [];
 			if (workspaceFolders) {
 				for (const folder of workspaceFolders) {
 					if (!toRemove.some(r => r.uri === folder.uri) && !toAdd.some(r => r.uri === folder.uri)) {

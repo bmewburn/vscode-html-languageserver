@@ -131,7 +131,7 @@ function getLanguageRanges(document: TextDocument, regions: EmbeddedRegion[], ra
 }
 
 function getLanguagesInDocument(_document: TextDocument, regions: EmbeddedRegion[]): string[] {
-	let result = [];
+	let result:string[] = [];
 	for (let region of regions) {
 		if (region.languageId && result.indexOf(region.languageId) === -1) {
 			result.push(region.languageId);

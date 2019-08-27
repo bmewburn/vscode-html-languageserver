@@ -257,14 +257,14 @@ export function getJavaScriptMode(documentRegions: LanguageModelCache<HTMLDocume
 			let formatSettings = convertOptions(formatParams, formatterSettings, initialIndentLevel + 1);
 			let start = currentTextDocument.offsetAt(range.start);
 			let end = currentTextDocument.offsetAt(range.end);
-			let lastLineRange = null;
+			let lastLineRange:Range|null = null;
 			if (range.end.line > range.start.line && (range.end.character === 0 || isWhitespaceOnly(currentTextDocument.getText().substr(end - range.end.character, range.end.character)))) {
 				end -= range.end.character;
 				lastLineRange = Range.create(Position.create(range.end.line, 0), range.end);
 			}
 			let edits = jsLanguageService.getFormattingEditsForRange(FILE_NAME, start, end, formatSettings);
 			if (edits) {
-				let result = [];
+				let result:TextEdit[] = [];
 				for (let edit of edits) {
 					if (edit.span.start >= start && edit.span.start + edit.span.length <= end) {
 						result.push({
