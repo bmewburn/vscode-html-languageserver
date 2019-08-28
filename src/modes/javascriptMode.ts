@@ -19,7 +19,7 @@ import { join } from 'path';
 const FILE_NAME = 'vscode://javascript/1';  // the same 'file' is used for all contents
 const JS_WORD_REGEX = /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g;
 
-let jquery_d_ts = join(__dirname, '../lib/jquery.d.ts'); // when packaged
+let jquery_d_ts = join(__dirname, './jquery.d.ts'); // when packaged
 if (!ts.sys.fileExists(jquery_d_ts)) {
 	jquery_d_ts = join(__dirname, '../../lib/jquery.d.ts'); // from source
 }
