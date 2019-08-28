@@ -7,7 +7,7 @@ const ts = require("typescript");
 const path_1 = require("path");
 const FILE_NAME = 'vscode://javascript/1';
 const JS_WORD_REGEX = /(-?\d*\.\d\w*)|([^\`\~\!\@\#\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g;
-let jquery_d_ts = path_1.join(__dirname, '../lib/jquery.d.ts');
+let jquery_d_ts = path_1.join(__dirname, './jquery.d.ts');
 if (!ts.sys.fileExists(jquery_d_ts)) {
     jquery_d_ts = path_1.join(__dirname, '../../lib/jquery.d.ts');
 }
