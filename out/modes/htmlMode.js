@@ -8,8 +8,8 @@ function getHTMLMode(htmlLanguageService, workspace) {
         getId() {
             return 'html';
         },
-        getSelectionRanges(document, positions) {
-            return htmlLanguageService.getSelectionRanges(document, positions);
+        getSelectionRange(document, position) {
+            return htmlLanguageService.getSelectionRanges(document, [position])[0];
         },
         doComplete(document, position, settings = workspace.settings) {
             let options = settings && settings.html && settings.html.suggest;
@@ -65,8 +65,20 @@ function getHTMLMode(htmlLanguageService, workspace) {
             }
             return null;
         },
+        doRename(document, position, newName) {
+            const htmlDocument = htmlDocuments.get(document);
+            return htmlLanguageService.doRename(document, position, newName, htmlDocument);
+        },
         onDocumentRemoved(document) {
             htmlDocuments.onDocumentRemoved(document);
+        },
+        findMatchingTagPosition(document, position) {
+            const htmlDocument = htmlDocuments.get(document);
+            return htmlLanguageService.findMatchingTagPosition(document, position, htmlDocument);
+        },
+        doOnTypeRename(document, position) {
+            const htmlDocument = htmlDocuments.get(document);
+            return htmlLanguageService.findSyncedRegions(document, position, htmlDocument);
         },
         dispose() {
             htmlDocuments.dispose();

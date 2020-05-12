@@ -1,16 +1,16 @@
 "use strict";
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
 Object.defineProperty(exports, "__esModule", { value: true });
 const vscode_css_languageservice_1 = require("vscode-css-languageservice");
 const vscode_html_languageservice_1 = require("vscode-html-languageservice");
-const vscode_languageserver_1 = require("vscode-languageserver");
-exports.Color = vscode_languageserver_1.Color;
-exports.ColorInformation = vscode_languageserver_1.ColorInformation;
-exports.ColorPresentation = vscode_languageserver_1.ColorPresentation;
 const languageModelCache_1 = require("../languageModelCache");
 const cssMode_1 = require("./cssMode");
 const embeddedSupport_1 = require("./embeddedSupport");
 const htmlMode_1 = require("./htmlMode");
 const javascriptMode_1 = require("./javascriptMode");
+__export(require("vscode-html-languageservice"));
 function getLanguageModes(supportedLanguages, workspace, clientCapabilities, customDataProviders) {
     const htmlLanguageService = vscode_html_languageservice_1.getLanguageService({ customDataProviders, clientCapabilities });
     const cssLanguageService = vscode_css_languageservice_1.getCSSLanguageService({ clientCapabilities });
@@ -23,7 +23,8 @@ function getLanguageModes(supportedLanguages, workspace, clientCapabilities, cus
         modes['css'] = cssMode_1.getCSSMode(cssLanguageService, documentRegions, workspace);
     }
     if (supportedLanguages['javascript']) {
-        modes['javascript'] = javascriptMode_1.getJavaScriptMode(documentRegions);
+        modes['javascript'] = javascriptMode_1.getJavaScriptMode(documentRegions, 'javascript');
+        modes['typescript'] = javascriptMode_1.getJavaScriptMode(documentRegions, 'typescript');
     }
     return {
         getModeAtPosition(document, position) {

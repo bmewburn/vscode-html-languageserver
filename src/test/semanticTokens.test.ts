@@ -27,7 +27,7 @@ function assertTokens(lines: string[], expected: ExpectedToken[], ranges?: Range
 	const legend = semanticTokensProvider.legend;
 	const actual = semanticTokensProvider.getSemanticTokens(document, ranges);
 
-	let actualRanges = [];
+	let actualRanges:ExpectedToken[] = [];
 	let lastLine = 0;
 	let lastCharacter = 0;
 	for (let i = 0; i < actual.length; i += 5) {

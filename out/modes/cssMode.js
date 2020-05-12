@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const languageModelCache_1 = require("../languageModelCache");
-const vscode_languageserver_types_1 = require("vscode-languageserver-types");
+const languageModes_1 = require("./languageModes");
 const embeddedSupport_1 = require("./embeddedSupport");
 function getCSSMode(cssLanguageService, documentRegions, workspace) {
     let embeddedCSSDocuments = languageModelCache_1.getLanguageModelCache(10, 60, document => documentRegions.get(document).getEmbeddedDocument('css'));
@@ -17,7 +17,7 @@ function getCSSMode(cssLanguageService, documentRegions, workspace) {
         doComplete(document, position, _settings = workspace.settings) {
             let embedded = embeddedCSSDocuments.get(document);
             const stylesheet = cssStylesheets.get(embedded);
-            return cssLanguageService.doComplete(embedded, position, stylesheet) || vscode_languageserver_types_1.CompletionList.create();
+            return cssLanguageService.doComplete(embedded, position, stylesheet) || languageModes_1.CompletionList.create();
         },
         doHover(document, position) {
             let embedded = embeddedCSSDocuments.get(document);
@@ -50,6 +50,10 @@ function getCSSMode(cssLanguageService, documentRegions, workspace) {
         getFoldingRanges(document) {
             let embedded = embeddedCSSDocuments.get(document);
             return cssLanguageService.getFoldingRanges(embedded, {});
+        },
+        getSelectionRange(document, position) {
+            let embedded = embeddedCSSDocuments.get(document);
+            return cssLanguageService.getSelectionRanges(embedded, [position], cssStylesheets.get(embedded))[0];
         },
         onDocumentRemoved(document) {
             embeddedCSSDocuments.onDocumentRemoved(document);
