@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getDocumentRegions = exports.CSS_STYLE_RULE = void 0;
 const languageModes_1 = require("./languageModes");
 exports.CSS_STYLE_RULE = '__';
 function getDocumentRegions(languageService, document) {

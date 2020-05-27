@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getLanguageModelCache = void 0;
 function getLanguageModelCache(maxEntries, cleanupIntervalTimeInSec, parse) {
     let languageModels = {};
     let nModels = 0;

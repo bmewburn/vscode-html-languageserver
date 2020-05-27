@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.testCompletionFor = exports.assertCompletion = void 0;
 require("mocha");
 const assert = require("assert");
 const path = require("path");

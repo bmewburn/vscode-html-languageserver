@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getHTMLMode = void 0;
 const languageModelCache_1 = require("../languageModelCache");
 const pathCompletion_1 = require("./pathCompletion");
 function getHTMLMode(htmlLanguageService, workspace) {

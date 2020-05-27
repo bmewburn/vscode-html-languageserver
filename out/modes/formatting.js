@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.format = void 0;
 const languageModes_1 = require("./languageModes");
 const arrays_1 = require("../utils/arrays");
 const strings_1 = require("../utils/strings");

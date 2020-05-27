@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getFoldingRanges = void 0;
 const languageModes_1 = require("./languageModes");
 function getFoldingRanges(languageModes, document, maxRanges, _cancellationToken) {
     let htmlMode = languageModes.getMode('html');

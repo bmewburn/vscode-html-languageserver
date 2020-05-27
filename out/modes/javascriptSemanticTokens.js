@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getSemanticTokens = exports.getSemanticTokenLegend = void 0;
 const ts = require("typescript");
 function getSemanticTokenLegend() {
     if (tokenTypes.length !== 11) {

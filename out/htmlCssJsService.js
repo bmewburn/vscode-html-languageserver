@@ -9,6 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.HtmlCssJsService = void 0;
 const vscode_languageserver_1 = require("vscode-languageserver");
 const vscode_languageserver_types_1 = require("vscode-languageserver-types");
 const languageModes_1 = require("./modes/languageModes");

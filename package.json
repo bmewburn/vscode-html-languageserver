@@ -1,7 +1,7 @@
 {
   "name": "@bmewburn/vscode-html-languageserver",
   "description": "HTML language server",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "Microsoft Corporation",
   "license": "MIT",
   "engines": {
@@ -13,7 +13,7 @@
     "url": "https://github.com/bmewburn/vscode-html-languageserver"
   },
   "dependencies": {
-    "typescript": "^3.8.3",
+    "typescript": "^3.9.3",
     "vscode-languageserver-protocol": "^3.15.3",
     "vscode-languageserver-types": "3.15.1",
     "vscode-css-languageservice": "^4.1.0",

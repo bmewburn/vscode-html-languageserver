@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getCSSMode = void 0;
 const languageModelCache_1 = require("../languageModelCache");
 const languageModes_1 = require("./languageModes");
 const embeddedSupport_1 = require("./embeddedSupport");

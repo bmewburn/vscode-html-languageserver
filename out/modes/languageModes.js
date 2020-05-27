@@ -1,8 +1,16 @@
 "use strict";
-function __export(m) {
-    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-}
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __exportStar = (this && this.__exportStar) || function(m, exports) {
+    for (var p in m) if (p !== "default" && !exports.hasOwnProperty(p)) __createBinding(exports, m, p);
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getLanguageModes = void 0;
 const vscode_css_languageservice_1 = require("vscode-css-languageservice");
 const vscode_html_languageservice_1 = require("vscode-html-languageservice");
 const languageModelCache_1 = require("../languageModelCache");
@@ -10,7 +18,7 @@ const cssMode_1 = require("./cssMode");
 const embeddedSupport_1 = require("./embeddedSupport");
 const htmlMode_1 = require("./htmlMode");
 const javascriptMode_1 = require("./javascriptMode");
-__export(require("vscode-html-languageservice"));
+__exportStar(require("vscode-html-languageservice"), exports);
 function getLanguageModes(supportedLanguages, workspace, clientCapabilities, customDataProviders) {
     const htmlLanguageService = vscode_html_languageservice_1.getLanguageService({ customDataProviders, clientCapabilities });
     const cssLanguageService = vscode_css_languageservice_1.getCSSLanguageService({ clientCapabilities });

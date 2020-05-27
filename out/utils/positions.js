@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.equalRange = exports.insideRangeButNotSame = exports.beforeOrSame = void 0;
 function beforeOrSame(p1, p2) {
     return p1.line < p2.line || p1.line === p2.line && p1.character <= p2.character;
 }
