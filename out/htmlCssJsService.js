@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.HtmlCssJsService = void 0;
-const vscode_languageserver_1 = require("vscode-languageserver");
+const node_1 = require("vscode-languageserver/node");
 const vscode_languageserver_types_1 = require("vscode-languageserver-types");
 const languageModes_1 = require("./modes/languageModes");
 const formatting_1 = require("./modes/formatting");
@@ -19,7 +19,6 @@ const documentContext_1 = require("./utils/documentContext");
 const vscode_uri_1 = require("vscode-uri");
 const runner_1 = require("./utils/runner");
 const htmlFolding_1 = require("./modes/htmlFolding");
-const customData_1 = require("./customData");
 const selectionRanges_1 = require("./modes/selectionRanges");
 var UpdateableDocument;
 (function (UpdateableDocument) {
@@ -31,13 +30,13 @@ var UpdateableDocument;
 class TextDocuments {
     constructor() {
         this._documents = Object.create(null);
-        this._onDidChangeContent = new vscode_languageserver_1.Emitter();
-        this._onDidOpen = new vscode_languageserver_1.Emitter();
-        this._onDidClose = new vscode_languageserver_1.Emitter();
-        this._onDidSave = new vscode_languageserver_1.Emitter();
+        this._onDidChangeContent = new node_1.Emitter();
+        this._onDidOpen = new node_1.Emitter();
+        this._onDidClose = new node_1.Emitter();
+        this._onDidSave = new node_1.Emitter();
     }
     get syncKind() {
-        return vscode_languageserver_1.TextDocumentSyncKind.Full;
+        return node_1.TextDocumentSyncKind.Full;
     }
     get onDidChangeContent() {
         return this._onDidChangeContent.event;
@@ -61,7 +60,7 @@ class TextDocuments {
         return Object.keys(this._documents);
     }
     open(textDocumentItem) {
-        let document = vscode_languageserver_types_1.TextDocument.create(textDocumentItem.uri, textDocumentItem.languageId, textDocumentItem.version, textDocumentItem.text);
+        let document = languageModes_1.TextDocument.create(textDocumentItem.uri, textDocumentItem.languageId, textDocumentItem.version, textDocumentItem.text);
         this._documents[textDocumentItem.uri] = document;
         let toFire = Object.freeze({ document });
         this._onDidOpen.fire(toFire);
@@ -101,6 +100,8 @@ var HtmlCssJsService;
     documents.onDidClose(e => {
         delete documentSettings[e.document.uri];
     });
+    const notReady = () => Promise.reject('Not Ready');
+    let requestService = { getContent: notReady, stat: notReady, readDirectory: notReady };
     function initialise(params) {
         const initializationOptions = params.initializationOptions;
         workspaceFolders = params.workspaceFolders;
@@ -110,13 +111,11 @@ var HtmlCssJsService;
                 workspaceFolders.push({ name: '', uri: vscode_uri_1.URI.file(params.rootPath).toString() });
             }
         }
-        const dataPaths = params.initializationOptions.dataPaths;
-        const providers = customData_1.getDataProviders(dataPaths);
         const workspace = {
             get settings() { return globalSettings; },
             get folders() { return workspaceFolders; }
         };
-        languageModes = languageModes_1.getLanguageModes({ css: true, javascript: true }, workspace, params.capabilities, providers);
+        languageModes = languageModes_1.getLanguageModes({ css: true, javascript: true }, workspace, params.capabilities, requestService);
         documents.onDidClose(e => {
             languageModes.onDocumentRemoved(e.document);
         });
@@ -182,7 +181,7 @@ var HtmlCssJsService;
     }
     HtmlCssJsService.diagnose = diagnose;
     function provideCompletions(textDocumentIdentifier, position, token) {
-        return runner_1.runSafeAsync(() => __awaiter(this, void 0, void 0, function* () {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (!document) {
                 return null;
@@ -193,13 +192,14 @@ var HtmlCssJsService;
             }
             const doComplete = mode.doComplete;
             const settings = yield getDocumentSettings(document, () => doComplete.length > 2);
-            const result = doComplete(document, position, settings);
+            const documentContext = documentContext_1.getDocumentContext(document.uri, workspaceFolders);
+            const result = doComplete(document, position, documentContext, settings);
             return result;
         }), null, `Error while computing completions for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideCompletions = provideCompletions;
     function completionItemResolve(item, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const data = item.data;
             if (data && data.languageId && data.uri) {
                 const mode = languageModes.getMode(data.languageId);
@@ -209,11 +209,11 @@ var HtmlCssJsService;
                 }
             }
             return item;
-        }, item, `Error while resolving completion proposal`, token);
+        }), item, `Error while resolving completion proposal`, token);
     }
     HtmlCssJsService.completionItemResolve = completionItemResolve;
     function provideHover(textDocumentIdentifier, position, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
                 const mode = languageModes.getModeAtPosition(document, position);
@@ -222,11 +222,11 @@ var HtmlCssJsService;
                 }
             }
             return null;
-        }, null, `Error while computing hover for ${textDocumentIdentifier.uri}`, token);
+        }), null, `Error while computing hover for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideHover = provideHover;
     function provideDocumentHighlight(textDocumentIdentifier, position, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
                 const mode = languageModes.getModeAtPosition(document, position);
@@ -235,11 +235,11 @@ var HtmlCssJsService;
                 }
             }
             return [];
-        }, [], `Error while computing document highlights for ${textDocumentIdentifier.uri}`, token);
+        }), [], `Error while computing document highlights for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideDocumentHighlight = provideDocumentHighlight;
     function onDefinition(textDocumentIdentifier, position, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
                 const mode = languageModes.getModeAtPosition(document, position);
@@ -248,11 +248,11 @@ var HtmlCssJsService;
                 }
             }
             return [];
-        }, null, `Error while computing definitions for ${textDocumentIdentifier.uri}`, token);
+        }), null, `Error while computing definitions for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.onDefinition = onDefinition;
     function provideReferences(textDocumentIdentifier, position, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
                 const mode = languageModes.getModeAtPosition(document, position);
@@ -261,11 +261,11 @@ var HtmlCssJsService;
                 }
             }
             return [];
-        }, [], `Error while computing references for ${textDocumentIdentifier.uri}`, token);
+        }), [], `Error while computing references for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideReferences = provideReferences;
     function provideSignatureHelp(textDocumentIdentifier, position, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
                 const mode = languageModes.getModeAtPosition(document, position);
@@ -274,11 +274,11 @@ var HtmlCssJsService;
                 }
             }
             return null;
-        }, null, `Error while computing signature help for ${textDocumentIdentifier.uri}`, token);
+        }), null, `Error while computing signature help for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideSignatureHelp = provideSignatureHelp;
     function provideDocumentRangeFormattingEdits(textDocumentIdentifier, range, options, token) {
-        return runner_1.runSafeAsync(() => __awaiter(this, void 0, void 0, function* () {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
                 let settings = yield getDocumentSettings(document, () => true);
@@ -294,73 +294,75 @@ var HtmlCssJsService;
     }
     HtmlCssJsService.provideDocumentRangeFormattingEdits = provideDocumentRangeFormattingEdits;
     function provideDocumentLinks(textDocumentIdentifier, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             const links = [];
             if (document) {
                 const documentContext = documentContext_1.getDocumentContext(document.uri, workspaceFolders);
-                languageModes.getAllModesInDocument(document).forEach(m => {
+                for (let m of languageModes.getAllModesInDocument(document)) {
                     if (m.findDocumentLinks) {
-                        arrays_1.pushAll(links, m.findDocumentLinks(document, documentContext));
+                        arrays_1.pushAll(links, yield m.findDocumentLinks(document, documentContext));
                     }
-                });
+                }
+                ;
             }
             return links;
-        }, [], `Error while document links for ${textDocumentIdentifier.uri}`, token);
+        }), [], `Error while document links for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideDocumentLinks = provideDocumentLinks;
     function provideDocumentSymbols(textDocumentIdentifier, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             const symbols = [];
             if (document) {
-                languageModes.getAllModesInDocument(document).forEach(m => {
+                for (let m of languageModes.getAllModesInDocument(document)) {
                     if (m.findDocumentSymbols) {
-                        arrays_1.pushAll(symbols, m.findDocumentSymbols(document));
+                        arrays_1.pushAll(symbols, yield m.findDocumentSymbols(document));
                     }
-                });
+                }
             }
             return symbols;
-        }, [], `Error while computing document symbols for ${textDocumentIdentifier.uri}`, token);
+        }), [], `Error while computing document symbols for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideDocumentSymbols = provideDocumentSymbols;
     function provideFoldingRanges(textDocumentIdentifier, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
                 return htmlFolding_1.getFoldingRanges(languageModes, document, foldingRangeLimit, token);
             }
             return null;
-        }, null, `Error while computing folding regions for ${textDocumentIdentifier.uri}`, token);
+        }), null, `Error while computing folding regions for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideFoldingRanges = provideFoldingRanges;
     function provideSelectionRanges(textDocumentIdentifier, positions, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
                 return selectionRanges_1.getSelectionRanges(languageModes, document, positions);
             }
             return [];
-        }, [], `Error while computing selection ranges for ${textDocumentIdentifier.uri}`, token);
+        }), [], `Error while computing selection ranges for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideSelectionRanges = provideSelectionRanges;
     function provideDocumentColours(textDocumentIdentifier, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const infos = [];
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
-                languageModes.getAllModesInDocument(document).forEach(m => {
+                for (let m of languageModes.getAllModesInDocument(document)) {
                     if (m.findDocumentColors) {
-                        arrays_1.pushAll(infos, m.findDocumentColors(document));
+                        arrays_1.pushAll(infos, yield m.findDocumentColors(document));
                     }
-                });
+                }
+                ;
             }
             return infos;
-        }, [], `Error while computing document colors for ${textDocumentIdentifier.uri}`, token);
+        }), [], `Error while computing document colors for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideDocumentColours = provideDocumentColours;
     function provideColorPresentations(textDocumentIdentifier, range, color, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
                 const mode = languageModes.getModeAtPosition(document, range.start);
@@ -369,11 +371,11 @@ var HtmlCssJsService;
                 }
             }
             return [];
-        }, [], `Error while computing color presentations for ${textDocumentIdentifier.uri}`, token);
+        }), [], `Error while computing color presentations for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideColorPresentations = provideColorPresentations;
     function provideTagClose(textDocumentIdentifier, position, token) {
-        return runner_1.runSafe(() => {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const document = documents.get(textDocumentIdentifier.uri);
             if (document) {
                 const pos = position;
@@ -385,7 +387,7 @@ var HtmlCssJsService;
                 }
             }
             return null;
-        }, null, `Error while computing tag close actions for ${textDocumentIdentifier.uri}`, token);
+        }), null, `Error while computing tag close actions for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideTagClose = provideTagClose;
     function getDocumentSettings(textDocument, needsDocumentSettings) {
@@ -418,11 +420,11 @@ var HtmlCssJsService;
                     const settings = yield getDocumentSettings(textDocument, () => modes.some(m => !!m.doValidation));
                     const latestTextDocument = documents.get(textDocument.uri);
                     if (latestTextDocument && latestTextDocument.version === version) {
-                        modes.forEach(mode => {
+                        for (let mode of modes) {
                             if (mode.doValidation && isValidationEnabled(mode.getId(), settings)) {
-                                arrays_1.pushAll(diagnostics, mode.doValidation(latestTextDocument, settings));
+                                arrays_1.pushAll(diagnostics, yield mode.doValidation(latestTextDocument, settings));
                             }
-                        });
+                        }
                         return { uri: latestTextDocument.uri, diagnostics };
                     }
                 }

@@ -310,7 +310,7 @@ export function getJavaScriptMode(documentRegions: LanguageModelCache<HTMLDocume
 			let formatSettings = convertOptions(formatParams, formatterSettings, initialIndentLevel + 1);
 			let start = jsDocument.offsetAt(range.start);
 			let end = jsDocument.offsetAt(range.end);
-			let lastLineRange = null;
+			let lastLineRange:Range|null = null;
 			if (range.end.line > range.start.line && (range.end.character === 0 || isWhitespaceOnly(jsDocument.getText().substr(end - range.end.character, range.end.character)))) {
 				end -= range.end.character;
 				lastLineRange = Range.create(Position.create(range.end.line, 0), range.end);

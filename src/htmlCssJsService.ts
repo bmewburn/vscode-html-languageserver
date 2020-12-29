@@ -8,24 +8,24 @@
 import {
 	InitializeParams, InitializeResult, ServerCapabilities, ConfigurationParams,
     WorkspaceFolder, ColorInformation, TextDocumentSyncKind, Emitter, TextDocumentChangeEvent
-} from 'vscode-languageserver';
-import { Event, CancellationToken, PublishDiagnosticsParams, TextDocumentContentChangeEvent } from 'vscode-languageserver-protocol'
+} from 'vscode-languageserver/node';
+import { Event, CancellationToken, PublishDiagnosticsParams, TextDocumentContentChangeEvent } from 'vscode-languageserver-protocol/node'
 import { 
-	TextDocument, Diagnostic, DocumentLink, SymbolInformation, CompletionItem, 
+	Diagnostic, DocumentLink, SymbolInformation, CompletionItem, 
 	Position, Range, TextDocumentIdentifier, VersionedTextDocumentIdentifier,
 	TextDocumentItem, FormattingOptions, Color
 } from 'vscode-languageserver-types';
-import { getLanguageModes, LanguageModes, Settings } from './modes/languageModes';
+import { getLanguageModes, LanguageModes, Settings, TextDocument } from './modes/languageModes';
 
 import { format } from './modes/formatting';
 import { pushAll } from './utils/arrays';
 import { getDocumentContext } from './utils/documentContext';
 import { URI } from 'vscode-uri';
-import { runSafe, runSafeAsync } from './utils/runner';
+import { runSafe } from './utils/runner';
 
 import { getFoldingRanges } from './modes/htmlFolding';
-import { getDataProviders } from './customData';
 import { getSelectionRanges } from './modes/selectionRanges';
+import { RequestService } from './requests';
 
 interface UpdateableDocument extends TextDocument {
 	update(event: TextDocumentContentChangeEvent, version: number): void;
@@ -183,7 +183,10 @@ export namespace HtmlCssJsService {
 
 	documents.onDidClose(e => {
 		delete documentSettings[e.document.uri];
-	});
+    });
+    
+    const notReady = () => Promise.reject('Not Ready');
+	let requestService: RequestService = { getContent: notReady, stat: notReady, readDirectory: notReady };
 
 	export function initialise(params: InitializeParams): InitializeResult {
 		const initializationOptions = params.initializationOptions;
@@ -196,15 +199,12 @@ export namespace HtmlCssJsService {
 			}
 		}
 
-		const dataPaths: string[] = params.initializationOptions.dataPaths;
-		const providers = getDataProviders(dataPaths);
-
 		const workspace = {
 			get settings() { return globalSettings; },
 			get folders() { return workspaceFolders; }
 		};
 
-		languageModes = getLanguageModes({ css: true, javascript: true }, workspace, params.capabilities, providers);
+		languageModes = getLanguageModes({ css: true, javascript: true }, workspace, params.capabilities, requestService);
 
 		documents.onDidClose(e => {
 			languageModes.onDocumentRemoved(e.document);
@@ -282,7 +282,7 @@ export namespace HtmlCssJsService {
 		position: Position,
 		token: CancellationToken
 	) {
-		return runSafeAsync(async () => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (!document) {
 				return null;
@@ -292,15 +292,16 @@ export namespace HtmlCssJsService {
 				return { isIncomplete: true, items: [] };
 			}
 			const doComplete = mode.doComplete!;
-			const settings = await getDocumentSettings(document, () => doComplete.length > 2);
-			const result = doComplete(document, position, settings);
+            const settings = await getDocumentSettings(document, () => doComplete.length > 2);
+            const documentContext = getDocumentContext(document.uri, workspaceFolders);
+			const result = doComplete(document, position, documentContext, settings);
 			return result;
 
 		}, null, `Error while computing completions for ${textDocumentIdentifier.uri}`, token);
 	}
 
 	export function completionItemResolve(item: CompletionItem, token: CancellationToken) {
-		return runSafe(() => {
+		return runSafe(async () => {
 			const data = item.data;
 			if (data && data.languageId && data.uri) {
 				const mode = languageModes.getMode(data.languageId);
@@ -318,7 +319,7 @@ export namespace HtmlCssJsService {
 		position:Position, 
 		token:CancellationToken
 	) {
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (document) {
 				const mode = languageModes.getModeAtPosition(document, position);
@@ -332,7 +333,7 @@ export namespace HtmlCssJsService {
 
 
 	export function provideDocumentHighlight(textDocumentIdentifier:TextDocumentIdentifier, position:Position, token:CancellationToken){
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (document) {
 				const mode = languageModes.getModeAtPosition(document, position);
@@ -346,7 +347,7 @@ export namespace HtmlCssJsService {
 
 
 	export function onDefinition(textDocumentIdentifier:TextDocumentIdentifier, position: Position, token:CancellationToken){
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (document) {
 				const mode = languageModes.getModeAtPosition(document, position);
@@ -359,7 +360,7 @@ export namespace HtmlCssJsService {
 	}
 
 	export function provideReferences(textDocumentIdentifier:TextDocumentIdentifier, position:Position, token:CancellationToken){
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (document) {
 				const mode = languageModes.getModeAtPosition(document, position);
@@ -372,7 +373,7 @@ export namespace HtmlCssJsService {
 	}
 
 	export function provideSignatureHelp(textDocumentIdentifier:TextDocumentIdentifier, position: Position, token:CancellationToken){
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (document) {
 				const mode = languageModes.getModeAtPosition(document, position);
@@ -390,7 +391,7 @@ export namespace HtmlCssJsService {
 		options:FormattingOptions, 
 		token:CancellationToken
 	){
-		return runSafeAsync(async () => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (document) {
 				let settings = await getDocumentSettings(document, () => true);
@@ -407,38 +408,38 @@ export namespace HtmlCssJsService {
 	}
 
 	export function provideDocumentLinks(textDocumentIdentifier:TextDocumentIdentifier, token:CancellationToken) {
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			const links: DocumentLink[] = [];
 			if (document) {
 				const documentContext = getDocumentContext(document.uri, workspaceFolders);
-				languageModes.getAllModesInDocument(document).forEach(m => {
+				for (let m of languageModes.getAllModesInDocument(document)) {
 					if (m.findDocumentLinks) {
-						pushAll(links, m.findDocumentLinks(document, documentContext));
+						pushAll(links, await m.findDocumentLinks(document, documentContext));
 					}
-				});
+				};
 			}
 			return links;
 		}, [], `Error while document links for ${textDocumentIdentifier.uri}`, token);
 	}
 
 	export function provideDocumentSymbols(textDocumentIdentifier:TextDocumentIdentifier, token:CancellationToken) {
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			const symbols: SymbolInformation[] = [];
 			if (document) {
-				languageModes.getAllModesInDocument(document).forEach(m => {
+				for (let m of languageModes.getAllModesInDocument(document)) {
 					if (m.findDocumentSymbols) {
-						pushAll(symbols, m.findDocumentSymbols(document));
+						pushAll(symbols, await m.findDocumentSymbols(document));
 					}
-				});
+				}
 			}
 			return symbols;
 		}, [], `Error while computing document symbols for ${textDocumentIdentifier.uri}`, token);
 	}
 
 	export function provideFoldingRanges(textDocumentIdentifier:TextDocumentIdentifier, token:CancellationToken) {
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (document) {
 				return getFoldingRanges(languageModes, document, foldingRangeLimit, token);
@@ -452,7 +453,7 @@ export namespace HtmlCssJsService {
 		positions:Position[], 
 		token:CancellationToken
 	) {
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 
 			if (document) {
@@ -463,15 +464,15 @@ export namespace HtmlCssJsService {
 	}
 
 	export function provideDocumentColours(textDocumentIdentifier:TextDocumentIdentifier, token:CancellationToken) {
-		return runSafe(() => {
+		return runSafe(async () => {
 			const infos: ColorInformation[] = [];
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (document) {
-				languageModes.getAllModesInDocument(document).forEach(m => {
+				for (let m of languageModes.getAllModesInDocument(document)) {
 					if (m.findDocumentColors) {
-						pushAll(infos, m.findDocumentColors(document));
+						pushAll(infos, await m.findDocumentColors(document));
 					}
-				});
+				};
 			}
 			return infos;
 		}, [], `Error while computing document colors for ${textDocumentIdentifier.uri}`, token);
@@ -483,7 +484,7 @@ export namespace HtmlCssJsService {
 		color: Color, 
 		token:CancellationToken
 	) {
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (document) {
 				const mode = languageModes.getModeAtPosition(document, range.start);
@@ -496,7 +497,7 @@ export namespace HtmlCssJsService {
 	}
 
 	export function provideTagClose(textDocumentIdentifier:TextDocumentIdentifier, position:Position, token:CancellationToken) {
-		return runSafe(() => {
+		return runSafe(async () => {
 			const document = documents.get(textDocumentIdentifier.uri);
 			if (document) {
 				const pos = position;
@@ -544,11 +545,11 @@ export namespace HtmlCssJsService {
 				const settings = await getDocumentSettings(textDocument, () => modes.some(m => !!m.doValidation));
 				const latestTextDocument = documents.get(textDocument.uri);
 				if (latestTextDocument && latestTextDocument.version === version) { // check no new version has come in after in after the async op
-					modes.forEach(mode => {
+					for (let mode of modes) {
 						if (mode.doValidation && isValidationEnabled(mode.getId(), settings)) {
-							pushAll(diagnostics, mode.doValidation(latestTextDocument, settings));
+							pushAll(diagnostics, await mode.doValidation(latestTextDocument, settings));
 						}
-					});
+					}
 					return <PublishDiagnosticsParams>{ uri: latestTextDocument.uri, diagnostics };
 				}
 			}
