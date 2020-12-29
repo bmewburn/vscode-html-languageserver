@@ -345,6 +345,19 @@ var HtmlCssJsService;
         }), [], `Error while computing selection ranges for ${textDocumentIdentifier.uri}`, token);
     }
     HtmlCssJsService.provideSelectionRanges = provideSelectionRanges;
+    function provideRename(textDocument, position, newName, token) {
+        return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
+            const document = documents.get(textDocument.uri);
+            if (document) {
+                const mode = languageModes.getModeAtPosition(document, position);
+                if (mode && mode.doRename) {
+                    return mode.doRename(document, position, newName);
+                }
+            }
+            return null;
+        }), null, `Error while computing rename for ${textDocument.uri}`, token);
+    }
+    HtmlCssJsService.provideRename = provideRename;
     function provideDocumentColours(textDocumentIdentifier, token) {
         return runner_1.runSafe(() => __awaiter(this, void 0, void 0, function* () {
             const infos = [];

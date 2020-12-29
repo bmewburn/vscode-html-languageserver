@@ -461,7 +461,27 @@ export namespace HtmlCssJsService {
 			}
 			return [];
 		}, [], `Error while computing selection ranges for ${textDocumentIdentifier.uri}`, token);
-	}
+    }
+    
+    export function provideRename(
+        textDocument: TextDocumentIdentifier, 
+        position:Position,
+        newName:string, 
+        token:CancellationToken
+    ) {
+        return runSafe(async () => {
+			const document = documents.get(textDocument.uri);
+
+			if (document) {
+				const mode = languageModes.getModeAtPosition(document, position);
+
+				if (mode && mode.doRename) {
+					return mode.doRename(document, position, newName);
+				}
+			}
+			return null;
+		}, null, `Error while computing rename for ${textDocument.uri}`, token);
+    }
 
 	export function provideDocumentColours(textDocumentIdentifier:TextDocumentIdentifier, token:CancellationToken) {
 		return runSafe(async () => {
