@@ -5,7 +5,7 @@ const path_1 = require("path");
 const fs_1 = require("fs");
 const contents = {};
 const serverFolder = path_1.basename(__dirname) === 'dist' ? path_1.dirname(__dirname) : path_1.dirname(path_1.dirname(__dirname));
-const TYPESCRIPT_LIB_SOURCE = path_1.join(serverFolder, '../../node_modules/typescript/lib');
+const TYPESCRIPT_LIB_SOURCE = path_1.join(serverFolder, 'node_modules/typescript/lib');
 const JQUERY_PATH = path_1.join(serverFolder, 'lib/jquery.d.ts');
 function loadLibrary(name) {
     let content = contents[name];
