@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.HtmlCssJsService = void 0;
+exports.HtmlCssJsService = exports.FileType = void 0;
 const node_1 = require("vscode-languageserver/node");
 const vscode_languageserver_types_1 = require("vscode-languageserver-types");
 const languageModes_1 = require("./modes/languageModes");
@@ -20,6 +20,8 @@ const vscode_uri_1 = require("vscode-uri");
 const runner_1 = require("./utils/runner");
 const htmlFolding_1 = require("./modes/htmlFolding");
 const selectionRanges_1 = require("./modes/selectionRanges");
+var requests_1 = require("./requests");
+Object.defineProperty(exports, "FileType", { enumerable: true, get: function () { return requests_1.FileType; } });
 var UpdateableDocument;
 (function (UpdateableDocument) {
     function isUpdateableDocument(value) {
@@ -101,9 +103,8 @@ var HtmlCssJsService;
         delete documentSettings[e.document.uri];
     });
     const notReady = () => Promise.reject('Not Ready');
-    let requestService = { getContent: notReady, stat: notReady, readDirectory: notReady };
-    function initialise(params) {
-        const initializationOptions = params.initializationOptions;
+    let dummyRequestService = { getContent: notReady, stat: notReady, readDirectory: notReady };
+    function initialise(params, requestService = dummyRequestService) {
         workspaceFolders = params.workspaceFolders;
         if (!Array.isArray(workspaceFolders)) {
             workspaceFolders = [];
@@ -151,6 +152,12 @@ var HtmlCssJsService;
         return { capabilities };
     }
     HtmlCssJsService.initialise = initialise;
+    function setWorkspaceFolders(folders) {
+        workspaceFolders = folders.map(f => {
+            return { name: '', uri: f };
+        });
+    }
+    HtmlCssJsService.setWorkspaceFolders = setWorkspaceFolders;
     function shutdown() {
         languageModes.dispose();
     }

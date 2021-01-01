@@ -26,6 +26,7 @@ import { runSafe } from './utils/runner';
 import { getFoldingRanges } from './modes/htmlFolding';
 import { getSelectionRanges } from './modes/selectionRanges';
 import { RequestService } from './requests';
+export { FileStat, FileType, RequestService } from './requests';
 
 interface UpdateableDocument extends TextDocument {
 	update(event: TextDocumentContentChangeEvent, version: number): void;
@@ -34,7 +35,7 @@ interface UpdateableDocument extends TextDocument {
 namespace UpdateableDocument {
 	export function isUpdateableDocument(value: TextDocument): value is UpdateableDocument {
 		return typeof (value as UpdateableDocument).update === 'function';
-	}
+    }
 }
 
 /**
@@ -186,10 +187,9 @@ export namespace HtmlCssJsService {
     });
     
     const notReady = () => Promise.reject('Not Ready');
-	let requestService: RequestService = { getContent: notReady, stat: notReady, readDirectory: notReady };
+	let dummyRequestService: RequestService = { getContent: notReady, stat: notReady, readDirectory: notReady };
 
-	export function initialise(params: InitializeParams): InitializeResult {
-		const initializationOptions = params.initializationOptions;
+	export function initialise(params: InitializeParams, requestService: RequestService = dummyRequestService): InitializeResult {
 
 		workspaceFolders = (<any>params).workspaceFolders;
 		if (!Array.isArray(workspaceFolders)) {
@@ -244,6 +244,11 @@ export namespace HtmlCssJsService {
 		return { capabilities };
 	}
 
+    export function setWorkspaceFolders(folders:string[]) {
+        workspaceFolders = folders.map(f => {
+            return {name: '', uri: f};
+        });
+    }
 
 	export function shutdown() {
 		languageModes.dispose();

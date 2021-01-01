@@ -2,8 +2,11 @@ import { InitializeParams, InitializeResult, ConfigurationParams, ColorInformati
 import { CancellationToken, PublishDiagnosticsParams, TextDocumentContentChangeEvent } from 'vscode-languageserver-protocol/node';
 import { DocumentLink, SymbolInformation, CompletionItem, Position, Range, TextDocumentIdentifier, VersionedTextDocumentIdentifier, TextDocumentItem, FormattingOptions, Color } from 'vscode-languageserver-types';
 import { Settings } from './modes/languageModes';
+import { RequestService } from './requests';
+export { FileStat, FileType, RequestService } from './requests';
 export declare namespace HtmlCssJsService {
-    function initialise(params: InitializeParams): InitializeResult;
+    function initialise(params: InitializeParams, requestService?: RequestService): InitializeResult;
+    function setWorkspaceFolders(folders: string[]): void;
     function shutdown(): void;
     function openDocument(textDocumentItem: TextDocumentItem): void;
     function closeDocument(textDocumentIdentifier: TextDocumentIdentifier): void;
