@@ -4,9 +4,10 @@ exports.loadLibrary = void 0;
 const path_1 = require("path");
 const fs_1 = require("fs");
 const contents = {};
-const serverFolder = path_1.basename(__dirname) === 'dist' ? path_1.dirname(__dirname) : path_1.dirname(path_1.dirname(__dirname));
-const TYPESCRIPT_LIB_SOURCE = path_1.join(serverFolder, 'node_modules/typescript/lib');
-const JQUERY_PATH = path_1.join(serverFolder, 'lib/jquery.d.ts');
+const isPacked = path_1.basename(__dirname) === 'lib';
+const serverFolder = isPacked ? __dirname : path_1.dirname(path_1.dirname(__dirname));
+const TYPESCRIPT_LIB_SOURCE = isPacked ? serverFolder : path_1.join(serverFolder, 'node_modules/typescript/lib');
+const JQUERY_PATH = isPacked ? path_1.join(serverFolder, 'jquery.d.ts') : path_1.join(serverFolder, 'lib/jquery.d.ts');
 function loadLibrary(name) {
     let content = contents[name];
     if (typeof content !== 'string') {
